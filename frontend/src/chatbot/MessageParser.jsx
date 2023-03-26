@@ -2,10 +2,13 @@ import React from 'react';
 
 const MessageParser = ({children, actions}) => {
     const parse = (message) => {
-        if (message.includes('hello')) {
-            console.log('hi');   
-            actions.handleHello();
-        } 
+        if (message.includes('init')) {
+            actions.handleInitChat();
+        }
+        else {
+            actions.handleSendMessage(message);
+        }
+
     };
     return (
     <div>

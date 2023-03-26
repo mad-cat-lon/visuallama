@@ -4,6 +4,8 @@ import './App.css';
 import ActionProvider from './chatbot/ActionProvider.jsx';
 import Config from './chatbot/Config';
 import MessageParser from './chatbot/MessageParser.jsx';
+import socketIO from 'socket.io-client';
+const socket = socketIO.connect('http://localhost:4000');
 
 function App() {
   return (
@@ -15,10 +17,6 @@ function App() {
           messageParser={MessageParser}
         />
       </div>
-      <form action="../../post" method="post" 
-              className="form">
-          <button type="submit">Connected?</button>
-      </form>
     </div>
   );
 };

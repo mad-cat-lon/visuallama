@@ -7,6 +7,7 @@ export class Model extends React.Component {
     }
 
     render() {
+        // TODO: Display params like temp/repetition penalty and allow editing 
         return (
             <div className='model-item' onClick={this.click}>
                 <div>{this.props.name}</div>

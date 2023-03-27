@@ -52,7 +52,19 @@ export class Chat extends React.Component {
             });
             this.setState({ models });
         });
+
+        socket.on('generating', model => {
+            console.log(`Model ${model.id} is generating a message`)
+            let models = this.state.models 
+            models.forEach(m => {
+                if (m.id === model.id) {
+                    m.typing = true;
+                }
+            })
+        });
+        
         this.socket = socket;
+
     }
 
     loadModels = async () => {

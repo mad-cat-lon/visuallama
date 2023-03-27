@@ -49,20 +49,21 @@ socketIO.on('connection', (socket) => {
             m.sockets.push(socket.id);
             m.participants++;
             socketIO.emit('model', m);
-            m.proc = spawn(LLAMA_EXE_PATH, ['-m', m.model_path, '-n', '256', '--repeat_penalty', '1.0', '-i', '-r', '"User:"', '-f', m.prompt_path])
+            m.proc = spawn(LLAMA_EXE_PATH, ['-m', m.model_path, '-n', m.num_tokens, '--repeat_penalty', m.repeat_penalty, '--interactive-start', '-f', m.prompt_path])
             if (m.proc != null) {
               replyBuffer = [];
               m.proc.stdout.on('data', (data) => {
+                // this is hacky, fix this later 
                 output = data.toString('utf8');
                 console.log(`Reply from ${m.name}: ${output}`);
-                if (output.includes("\n")) {
+                if ((output.includes("\n")) || (replyBuffer.length > 50)) {
                   replyBuffer.push(output);
                   console.log("Sending message...");
                   socketIO.emit("message", {model_id: m.id, senderName: m.name, text: replyBuffer.join(" ")});
                   replyBuffer.length = 0;
                 }
                 else {
-                  if (output == "," || output == ".")  {
+                  if (output == "," || output == "." || output == "'" || output == ";" || output == "!" || output == "?")  {
                     replyBuffer[replyBuffer.length - 1] = replyBuffer[replyBuffer.length - 1] + output
                   }
                   else {
@@ -80,6 +81,13 @@ socketIO.on('connection', (socket) => {
     socket.on('send-message', (message) => {
       console.log(`Received message: ${message.text} from ${message.senderName} to model ${message.model_id}`);
       socketIO.emit('message', message);
+      MODELS.forEach(m => {
+        if ((m.id === message.model_id) && (m.proc != null)) {
+          console.log("Sending message to model stdin")
+          m.proc.stdin.setEncoding('utf-8');
+          m.proc.stdin.write(message.text.concat("\n"));
+        }
+      })
     });
 
     socket.on('disconnect', () => {

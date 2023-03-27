@@ -10,13 +10,11 @@ const socket = socketIO.connect('http://localhost:4000');
 function App() {
   return (
     <div className="App">
-      <div style={{maxWidth: "600px"}}>
         <Chatbot 
           config={Config}
           actionProvider={ActionProvider}
           messageParser={MessageParser}
         />
-      </div>
     </div>
   );
 };

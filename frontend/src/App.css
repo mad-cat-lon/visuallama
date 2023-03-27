@@ -1,10 +1,11 @@
 .App {
   text-align: center;
   background-color:rgb(146, 146, 146);
-  min-height: 100vh;
+  width: 100vw;
+  height: 100%;
+  min-height: 100%;
+  min-width: 100%;
   display: flex; 
-  justify-content: center;
-  align-items: center;
 }
 
 .react-chatbot-kit-user-chat-message-container {
@@ -91,7 +92,7 @@
   font-weight: medium;
   position: relative;
   width: 184.5px;
-  margin-left: auto;
+  margin-left: left;
   text-align: left;
 }
 
@@ -145,11 +146,12 @@
 
 .react-chatbot-kit-chat-container {
   position: relative;
-  width: 275px;
+  height: 100vh;
+  width: 100vw
 }
 
 .react-chatbot-kit-chat-inner-container {
-  height: 500px;
+  height: 98%;
   background-color: #fff;
   border-radius: 3px;
   border-radius: 5px;
@@ -176,9 +178,9 @@
 }
 
 .react-chatbot-kit-chat-message-container {
-  padding: 0 17.5px 10px 17.5px;
+  padding: 0 5px 10px 5px;
   overflow: scroll;
-  height: 424px;
+  height: 98%;
 }
 
 .react-chatbot-kit-chat-input {

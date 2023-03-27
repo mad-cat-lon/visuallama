@@ -29,8 +29,8 @@ export class MessagePanel extends React.Component {
             let m = this.props.model.messages[0];
             list.push(<MessageHeader key={m.id} id={m.id} senderName={m.senderName} text={m.text}></MessageHeader>)
             for (let i=1; i < this.props.model.messages.length; i++) {
-                last = this.props.model.messages[i-1];
-                curr = this.props.model.messages[i];
+                let last = this.props.model.messages[i-1];
+                let curr = this.props.model.messages[i];
                 if (last.senderName == curr.senderName) {
                     list.push(<Message key={curr.id} id={curr.id} senderName={curr.senderName} text={curr.text}></Message>)
                 }

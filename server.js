@@ -59,7 +59,7 @@ socketIO.on('connection', (socket) => {
                 if ((output.includes("\n")) || (replyBuffer.length > 50)) {
                   replyBuffer.push(output);
                   console.log("Sending message...");
-                  socketIO.emit("message", {model_id: m.id, senderName: m.name, text: replyBuffer.join(" ")});
+                  socketIO.emit("message", {model_id: m.id, senderName: m.name, text: replyBuffer.join("")});
                   replyBuffer.length = 0;
                 }
                 else {

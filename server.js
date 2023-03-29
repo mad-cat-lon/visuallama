@@ -5,7 +5,7 @@ var http = require('http').createServer(app);
 const LLAMA_EXE_PATH = 'C:\\Users\\cyrus\\Desktop\\llama.cpp\\llama.exe'
 
 var MODELS = [{
-  name: "Alpaca 7B 4-bit quantized",
+  name: "7b-ggml-model-q4",
   id: 1,
   sockets: [],
   participants: 0,
@@ -13,12 +13,43 @@ var MODELS = [{
   prompt_path: 'C:\\Users\\cyrus\\Desktop\\llama.cpp\\prompts\\test.txt',
   top_k: 40,
   top_p: 0.9,
-  num_tokens: 128,
+  num_tokens: 100,
   repeat_penalty: 1.3,
   repeat_penalty_num_tokens: 64,
-  temp: 0.8,
+  temp: 0.1,
   proc: null,
-}]
+},
+{
+  name: "13b-ggml-model-f16",
+  id: 2,
+  sockets: [],
+  participants: 0,
+  model_path: "C:\\Users\\cyrus\\Desktop\\llama.cpp\\models\\13B\\ggml-model-f16.bin",
+  prompt_path: 'C:\\Users\\cyrus\\Desktop\\llama.cpp\\prompts\\test.txt',
+  top_k: 40,
+  top_p: 0.9,
+  num_tokens: 100,
+  repeat_penalty: 1.3,
+  repeat_penalty_num_tokens: 64,
+  temp: 0.1,
+  proc: null,
+},
+{
+  name: "13b-ggml-model-q4",
+  id: 3,
+  sockets: [],
+  participants: 0,
+  model_path: "C:\\Users\\cyrus\\Desktop\\llama.cpp\\models\\13B\\ggml-model-q4_0.bin",
+  prompt_path: 'C:\\Users\\cyrus\\Desktop\\llama.cpp\\prompts\\test.txt',
+  top_k: 40,
+  top_p: 0.9,
+  num_tokens: 100,
+  repeat_penalty: 1.3,
+  repeat_penalty_num_tokens: 64,
+  temp: 0.1,
+  proc: null,
+}
+]
 
 const socketIO = require('socket.io')(http, {
   cors: {
@@ -49,27 +80,27 @@ socketIO.on('connection', (socket) => {
             m.sockets.push(socket.id);
             m.participants++;
             socketIO.emit('model', m);
-            m.proc = spawn(LLAMA_EXE_PATH, ['-m', m.model_path, '-n', m.num_tokens, '--repeat_penalty', m.repeat_penalty, '--interactive-start', '-f', m.prompt_path])
+            m.proc = spawn(LLAMA_EXE_PATH, ['-m', m.model_path, '-n', m.num_tokens, '--repeat_penalty', m.repeat_penalty, '--interactive-start'])
             if (m.proc != null) {
+              console.log(`[*] Model ${id} loaded`)
               replyBuffer = [];
               m.proc.stdout.on('data', (data) => {
                 // this is hacky, fix this later 
                 output = data.toString('utf8');
                 console.log(`Reply from ${m.name}: ${output}`);
-                if ((output.includes("\n")) || (replyBuffer.length > 50)) {
+                /*
+                console.log(`Reply from ${m.name}: ${output}`);
+                if (output == "," || output == "." || output == ";" || output == "!" || output == "?")  {
                   replyBuffer.push(output);
                   console.log("Sending message...");
                   socketIO.emit("message", {model_id: m.id, senderName: m.name, text: replyBuffer.join("")});
                   replyBuffer.length = 0;
                 }
                 else {
-                  if (output == "," || output == "." || output == "'" || output == ";" || output == "!" || output == "?")  {
-                    replyBuffer[replyBuffer.length - 1] = replyBuffer[replyBuffer.length - 1] + output
-                  }
-                  else {
-                    replyBuffer.push(output);
-                  }
+                  replyBuffer.push(output);
                 }
+                */
+               socketIO.emit("output", {model_id: m.id, senderName: m.name, text: output});
               });
             }
           }
@@ -78,9 +109,9 @@ socketIO.on('connection', (socket) => {
       return id;
     });
 
-    socket.on('send-message', (message) => {
-      console.log(`Received message: ${message.text} from ${message.senderName} to model ${message.model_id}`);
-      socketIO.emit('message', message);
+    socket.on('send-input', (message) => {
+      console.log(`Received input: ${message.text} from ${message.senderName} to model ${message.model_id}`);
+      socketIO.emit('input', message);
       MODELS.forEach(m => {
         if ((m.id === message.model_id) && (m.proc != null)) {
           console.log("Sending message to model stdin")

@@ -1,9 +1,11 @@
-import React from 'react';
+import * as React from 'react';
+
+
 import { Model } from './Model';
 
 export class ModelList extends React.Component {
 
-    handleClick = id => {
+    handleSelectModel = id => {
         this.props.onSelectModel(id);
     }
 
@@ -24,10 +26,10 @@ export class ModelList extends React.Component {
             repeat_penalty={m.repeat_penalty}
             repeat_penalty_num_tokens={m.repeat_penalty_num_tokens}
             temp={m.temp}
-            onClick={this.handleClick}/>);
+            onSelectModel={this.handleSelectModel}/>);
         }
         return (
-            <div className='model-list'>
+            <div>
                 {list}
             </div>);
     }

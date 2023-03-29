@@ -1,8 +1,7 @@
 import React from 'react';
-import '../chat.scss';
-import {MessagePanel} from './MessagePanel'
 import {ModelList} from './ModelList'
 import socketClient from 'socket.io-client';
+import {MessageStack} from './MessageStack';
 const server = "http://localhost:4000";
 
 export class Chat extends React.Component {
@@ -38,8 +37,30 @@ export class Chat extends React.Component {
             this.setState({ models });
         });
 
-        socket.on('message', message => {
-            console.log(`Received message: ${message}`)
+        socket.on('output', message => {
+            console.log(`Received output: ${message}`)
+            let models = this.state.models
+            models.forEach(m => {
+                if (m.id === message.model_id) {
+                    if (!m.messages) {
+                        m.messages = [message];
+                    } else {
+                        let lastOutputIndex = m.messages.findLastIndex((output) => output.senderName == m.name);
+                        console.log(`lastOutputIndex: ${lastOutputIndex}`);
+                        if (lastOutputIndex == -1) {
+                            m.messages.push(message);
+                        }
+                        else {
+                            m.messages[lastOutputIndex].text = m.messages[lastOutputIndex].text.concat(message.text);
+                        }
+                    }
+                }
+            });
+            this.setState({ models });
+        });
+        
+        socket.on('input', message => {
+            console.log(`Received input: ${message}`)
             let models = this.state.models
             models.forEach(m => {
                 if (m.id === message.model_id) {
@@ -51,18 +72,7 @@ export class Chat extends React.Component {
                 }
             });
             this.setState({ models });
-        });
-
-        socket.on('generating', model => {
-            console.log(`Model ${model.id} is generating a message`)
-            let models = this.state.models 
-            models.forEach(m => {
-                if (m.id === model.id) {
-                    m.typing = true;
-                }
-            })
-        });
-        
+        })
         this.socket = socket;
 
     }
@@ -77,11 +87,11 @@ export class Chat extends React.Component {
     }
 
     handleSendMessage = (model_id, text) => {
-        console.log("Sending message")
-        this.socket.emit('send-message', {model_id, text, senderName: this.socket.id, id: Date.now() });
+        console.log("Sending input")
+        this.socket.emit('send-input', {model_id, text, senderName: this.socket.id, id: Date.now() });
     }
 
-    handleModelSelect = id => {
+    handleSelectModel = id => {
         let model = this.state.models.find(m => {return m.id === id;});
         this.setState({ model })
         console.log("Loading model")
@@ -92,8 +102,8 @@ export class Chat extends React.Component {
     render() {
         return (
             <div className='chat-app'>
-                <ModelList models={this.state.models} onSelectModel={this.handleModelSelect}/>
-                <MessagePanel onSendMessage={this.handleSendMessage} model={this.state.model}/>
+                <ModelList models={this.state.models} onSelectModel={this.handleSelectModel}/>
+                <MessageStack onSendMessage={this.handleSendMessage} model={this.state.model}/>
             </div>
         );
     }

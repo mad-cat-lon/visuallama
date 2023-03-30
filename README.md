@@ -17,3 +17,7 @@ This is a work in progress and is being continually updated! I am not an expert 
 - Storing model settings, chat history, logs etc. in MongoDB
 - Cleaner UI 
 - Support for multiple users
+
+https://user-images.githubusercontent.com/113548315/228936879-af1c88ed-4269-4d28-b93d-c60ae6619d31.mp4
+
+Tiny usage example (sped up slightly because my CPU is pretty slow, even when running running the smallest LLaMa model with 4-bit quantization) 

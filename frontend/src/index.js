@@ -4,10 +4,29 @@ import './index.css';
 import './chat.scss';
 import {Chat} from './components/Chat'
 import reportWebVitals from './reportWebVitals';
+import { createTheme, ThemeProvider, styled } from '@mui/material/styles';
+
+ const theme = createTheme({
+    palette: {
+      mode: 'dark',
+      primary: {
+        main: '#3f51b5',
+      },
+      secondary: {
+        main: '#f50057',
+      },
+    },
+    typography: {
+      fontFamily: [
+        'Monospace'
+      ].join(',')
+    },
+  });
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-    <Chat/>
+    <ThemeProvider theme={theme}><Chat/></ThemeProvider>
+
 );
 
 // If you want to start measuring performance in your app, pass a function

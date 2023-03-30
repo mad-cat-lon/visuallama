@@ -2,6 +2,7 @@ import * as React from 'react';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
 import { styled } from '@mui/material/styles';
+import LinearProgress from '@mui/material/LinearProgress';
 
 /*
 export class Message extends React.Component {
@@ -16,10 +17,11 @@ export class Message extends React.Component {
 */ 
 
 const Item = styled(Paper)(({ theme }) => ({
-    backgroundColor: theme.palette.mode === 'dark' ? '#1A2027' : '#fff',
+    backgroundColor: theme.palette.mode === 'dark' ? '#1e1e1e' : '#fff',
     ...theme.typography.body1,
     padding: theme.spacing(1),
     textAlign: 'left',
+    width: '100%',
     color: theme.palette.text.secondary,
   }));
 
@@ -31,7 +33,10 @@ export class Message extends React.Component {
 
     render() {
         return (
+            <Box>
             <Item>{this.props.text}</Item>
+            {this.props.waiting && <LinearProgress/>}
+            </Box>
         );
     }
-}
+}   

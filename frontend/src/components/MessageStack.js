@@ -16,7 +16,7 @@ export class MessageStack extends React.Component {
         let list = <div className="no-content-message">No messages yet</div>
         // TODO: make pretty later
         if (this.props.model && this.props.model.messages) {
-            list = this.props.model.messages.map(m => <Message key={m.id} id={m.id} senderName={m.senderName} text={m.text}></Message>)
+            list = this.props.model.messages.map(m => <Message key={m.id} id={m.id} senderName={m.senderName} text={m.text} waiting={m.waiting}></Message>)
         }
         return (
             <Box sx={{
@@ -24,16 +24,18 @@ export class MessageStack extends React.Component {
                 flexDirection: 'column',
                 padding: '10px 10px',
                 height: '80vh',
-                width: '100%'
+                width: '100%',
+                background: '#00000',
+                border: 2,
+                borderColor: '#f50057'
                 }}>
                 <Stack
                     direction="column"
-                    divider={<Divider orientation="horizontal" flexItem />}
                     spacing={2}
                     sx={{
                         flexGrow: 1,
                         overflowY: 'auto',
-                        padding: '10px 16px',
+                        padding: '16px 16px',
                     }}
                 >
                     {list}

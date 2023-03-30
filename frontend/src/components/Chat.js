@@ -1,7 +1,7 @@
 import React from 'react';
 import {ModelList} from './ModelList'
 import socketClient from 'socket.io-client';
-import {MessageStack} from './MessageStack';
+import {MessagePanel} from './MessagePanel';
 const server = "http://localhost:4000";
 
 export class Chat extends React.Component {

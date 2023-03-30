@@ -1,16 +1,11 @@
 import * as React from 'react';
-import Divider from '@mui/material/Divider';
-import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
-import { styled } from '@mui/material/styles';
-
 import {MessageInput} from './MessageInput';
 import {Message} from './Message';
-import TextField from '@mui/material/TextField';
 
 
-export class MessageStack extends React.Component {
+export class MessagePanel extends React.Component {
 
     render() {
         let list = <div className="no-content-message">No messages yet</div>

@@ -125,7 +125,7 @@ export class Chat extends React.Component {
         return (
             <div className='chat-app'>
                 <ModelList models={this.state.models} onLoadModel={this.handleLoadModel} onUnloadModel={this.handleUnloadModel}/>
-                <MessageStack onSendMessage={this.handleSendMessage} model={this.state.model}/>
+                <MessagePanel onSendMessage={this.handleSendMessage} model={this.state.model}/>
             </div>
         );
     }

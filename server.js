@@ -80,27 +80,39 @@ socketIO.on('connection', (socket) => {
             m.sockets.push(socket.id);
             m.participants++;
             socketIO.emit('model', m);
+            // We need to ignore the first token that gets outputted
+            let firstToken = true;
             m.proc = spawn(LLAMA_EXE_PATH, ['-m', m.model_path, '-n', m.num_tokens, '--repeat_penalty', m.repeat_penalty, '--interactive-start'])
             if (m.proc != null) {
               console.log(`[*] Model ${id} loaded`)
               replyBuffer = [];
               m.proc.stdout.on('data', (data) => {
-                // this is hacky, fix this later 
-                output = data.toString('utf8');
-                console.log(`Reply from ${m.name}: ${output}`);
-                /*
-                console.log(`Reply from ${m.name}: ${output}`);
-                if (output == "," || output == "." || output == ";" || output == "!" || output == "?")  {
-                  replyBuffer.push(output);
-                  console.log("Sending message...");
-                  socketIO.emit("message", {model_id: m.id, senderName: m.name, text: replyBuffer.join("")});
-                  replyBuffer.length = 0;
+                // this is hacky, fix this later
+                if (firstToken == false) {
+                  output = data.toString('utf8');
+                  console.log(`Reply from ${m.name}: ${output}`);
+                  /*
+                  console.log(`Reply from ${m.name}: ${output}`);
+                  if (output == "," || output == "." || output == ";" || output == "!" || output == "?")  {
+                    replyBuffer.push(output);
+                    console.log("Sending message...");
+                    socketIO.emit("message", {model_id: m.id, senderName: m.name, text: replyBuffer.join("")});
+                    replyBuffer.length = 0;
+                  }
+                  else {
+                    replyBuffer.push(output);
+                  }
+                  */
+                socketIO.emit("output", {model_id: m.id, senderName: m.name, text: output});
                 }
                 else {
-                  replyBuffer.push(output);
+                  firstToken = false;
                 }
-                */
-               socketIO.emit("output", {model_id: m.id, senderName: m.name, text: output});
+              });
+              m.proc.stdout.on('close', (code) => {
+                console.log("Finished output.");
+                socketIO.emit("finished", {model_id: m.id, senderName: m.name, text: `END OF OUTPUT`});
+                m.proc = null;
               });
             }
           }
@@ -108,6 +120,19 @@ socketIO.on('connection', (socket) => {
       });
       return id;
     });
+
+    socket.on('unload-model', (id) => {
+      MODELS.forEach(m => {
+        if ((m.id == id) && (m.proc != null)) {
+          console.log(`Unloading model ${id}`);
+          m.proc.kill();
+          m.proc = null;
+          console.log(`Model ${id} unloaded`);
+        }
+      });
+      return id;
+    });
+    
 
     socket.on('send-input', (message) => {
       console.log(`Received input: ${message.text} from ${message.senderName} to model ${message.model_id}`);
@@ -139,3 +164,4 @@ app.get('/getModels', (req, res) => {
       models: MODELS
   })
 });
+

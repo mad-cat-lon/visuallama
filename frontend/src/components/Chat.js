@@ -52,6 +52,7 @@ export class Chat extends React.Component {
                         }
                         else {
                             m.messages[lastOutputIndex].text = m.messages[lastOutputIndex].text.concat(message.text);
+                            m.messages[lastOutputIndex].waiting = true;
                         }
                     }
                 }
@@ -69,6 +70,19 @@ export class Chat extends React.Component {
                     } else {
                         m.messages.push(message);
                     }
+                }
+            });
+            this.setState({ models });
+        })
+
+        socket.on('finished', message => {
+            console.log("Finished output");
+            let models = this.state.models
+            models.forEach(m => {
+                if (m.id == message.model_id) {
+                    let lastOutputIndex = m.messages.findLastIndex((output) => output.senderName == m.name);
+                    m.messages[lastOutputIndex].waiting = false;
+                    m.messages.push(message);
                 }
             });
             this.setState({ models });
@@ -91,7 +105,7 @@ export class Chat extends React.Component {
         this.socket.emit('send-input', {model_id, text, senderName: this.socket.id, id: Date.now() });
     }
 
-    handleSelectModel = id => {
+    handleLoadModel = id => {
         let model = this.state.models.find(m => {return m.id === id;});
         this.setState({ model })
         console.log("Loading model")
@@ -99,10 +113,18 @@ export class Chat extends React.Component {
         });
     }
 
+    handleUnloadModel = id => {
+        let model = this.state.models.find(m => {return m.id === id;});
+        this.setState({ model })
+        console.log("Unloading model")
+        this.socket.emit('unload-model', id, ack => {
+        });
+    }
+
     render() {
         return (
             <div className='chat-app'>
-                <ModelList models={this.state.models} onSelectModel={this.handleSelectModel}/>
+                <ModelList models={this.state.models} onLoadModel={this.handleLoadModel} onUnloadModel={this.handleUnloadModel}/>
                 <MessageStack onSendMessage={this.handleSendMessage} model={this.state.model}/>
             </div>
         );

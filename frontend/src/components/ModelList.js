@@ -5,10 +5,6 @@ import { Model } from './Model';
 
 export class ModelList extends React.Component {
 
-    handleSelectModel = id => {
-        this.props.onSelectModel(id);
-    }
-
     render() {
 
         let list = <div className="no-content-message">There are no models to show</div>;
@@ -26,8 +22,9 @@ export class ModelList extends React.Component {
             repeat_penalty={m.repeat_penalty}
             repeat_penalty_num_tokens={m.repeat_penalty_num_tokens}
             temp={m.temp}
-            onSelectModel={this.handleSelectModel}/>);
-        }
+            onLoadModel={this.props.onLoadModel}
+            onUnloadModel={this.props.onUnloadModel}/>
+        )}
         return (
             <div>
                 {list}

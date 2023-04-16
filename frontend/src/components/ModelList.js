@@ -6,7 +6,6 @@ import { Model } from './Model';
 export class ModelList extends React.Component {
 
     render() {
-
         let list = <div className="no-content-message">There are no models to show</div>;
         if (this.props.models && this.props.models.map) {
             list = this.props.models.map(m => 
@@ -25,6 +24,7 @@ export class ModelList extends React.Component {
             onLoadModel={this.props.onLoadModel}
             onUnloadModel={this.props.onUnloadModel}/>
         )}
+                
         return (
             <div>
                 {list}

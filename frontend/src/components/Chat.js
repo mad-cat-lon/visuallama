@@ -19,7 +19,7 @@ export class Chat extends React.Component {
     }
 
     configureSocket = () => {
-
+        var newMessage = false;
         var socket = socketClient(server);
         socket.on('connection', () => {
             if (this.state.model) {
@@ -43,16 +43,23 @@ export class Chat extends React.Component {
             models.forEach(m => {
                 if (m.id === message.model_id) {
                     if (!m.messages) {
+                        message.waiting = true;
                         m.messages = [message];
                     } else {
-                        let lastOutputIndex = m.messages.findLastIndex((output) => output.senderName == m.name);
-                        console.log(`lastOutputIndex: ${lastOutputIndex}`);
-                        if (lastOutputIndex == -1) {
-                            m.messages.push(message);
+                        if (newMessage == false) {
+                            let lastOutputIndex = m.messages.findLastIndex((output) => output.senderName == m.name);
+                            console.log(`lastOutputIndex: ${lastOutputIndex}`);
+                            if (lastOutputIndex == -1) {
+                                m.messages.push(message);
+                            }
+                            else {
+                                m.messages[lastOutputIndex].text = m.messages[lastOutputIndex].text.concat(message.text);
+                                m.messages[lastOutputIndex].waiting = true;
+                            }
                         }
                         else {
-                            m.messages[lastOutputIndex].text = m.messages[lastOutputIndex].text.concat(message.text);
-                            m.messages[lastOutputIndex].waiting = true;
+                            m.messages.push(message);
+                            newMessage = false;
                         }
                     }
                 }
@@ -82,10 +89,10 @@ export class Chat extends React.Component {
                 if (m.id == message.model_id) {
                     let lastOutputIndex = m.messages.findLastIndex((output) => output.senderName == m.name);
                     m.messages[lastOutputIndex].waiting = false;
-                    m.messages.push(message);
                 }
             });
             this.setState({ models });
+            newMessage = true;
         })
         this.socket = socket;
 

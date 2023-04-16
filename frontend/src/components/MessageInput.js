@@ -5,6 +5,7 @@ import TextField from '@mui/material/TextField';
 export class MessageInput extends React.Component {
 
     state = {input_val: ''}
+    
     send = () => {
         if (this.state.input_val && this.state.input_val != '') {
             // Fix how this is implemented later

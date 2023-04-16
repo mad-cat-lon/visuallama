@@ -11,7 +11,7 @@ import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import FormGroup from '@mui/material/FormGroup';
 import Chip from '@mui/material/Chip';
-import { Slider, Box, TextField } from '@mui/material';
+import { Slider, Box, TextField, CircularProgress} from '@mui/material';
 import { Stack } from '@mui/system';
 
 const Accordion = styled((props) => (

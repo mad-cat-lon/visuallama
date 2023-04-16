@@ -1,16 +1,32 @@
 const app = require("express")();
 const { spawn } = require('child_process');
 var http = require('http').createServer(app);
+const bodyParser = require('body-parser');
 
-const LLAMA_EXE_PATH = 'C:\\Users\\cyrus\\Desktop\\llama.cpp\\llama.exe'
+const LLAMA_EXE_PATH = 'your\\path\\goes\\here'
 
 var MODELS = [{
-  name: "7b-ggml-model-q4",
+  name: "gpt4all-lora-quantized",
+  id: 0,
+  sockets: [],
+  participants: 0,
+  model_path: "your\\path\\goes\\here",
+  prompt_path: 'your\\path\\goes\\here',
+  top_k: 40,
+  top_p: 0.9,
+  num_tokens: 100,
+  repeat_penalty: 1.3,
+  repeat_penalty_num_tokens: 64,
+  temp: 0.1,
+  proc: null,
+},
+{
+  name: "gpt4all-lora-quantized-unfiltered",
+  sockets: [],
   id: 1,
-  sockets: [],
   participants: 0,
-  model_path: "C:\\Users\\cyrus\\Desktop\\llama.cpp\\models\\7B\\ggml-model-q4_0.bin",
-  prompt_path: 'C:\\Users\\cyrus\\Desktop\\llama.cpp\\prompts\\test.txt',
+  model_path: "your\\path\\goes\\here",
+  prompt_path: 'your\\path\\goes\\here',
   top_k: 40,
   top_p: 0.9,
   num_tokens: 100,
@@ -18,38 +34,8 @@ var MODELS = [{
   repeat_penalty_num_tokens: 64,
   temp: 0.1,
   proc: null,
-},
-{
-  name: "13b-ggml-model-f16",
-  id: 2,
-  sockets: [],
-  participants: 0,
-  model_path: "C:\\Users\\cyrus\\Desktop\\llama.cpp\\models\\13B\\ggml-model-f16.bin",
-  prompt_path: 'C:\\Users\\cyrus\\Desktop\\llama.cpp\\prompts\\test.txt',
-  top_k: 40,
-  top_p: 0.9,
-  num_tokens: 100,
-  repeat_penalty: 1.3,
-  repeat_penalty_num_tokens: 64,
-  temp: 0.1,
-  proc: null,
-},
-{
-  name: "13b-ggml-model-q4",
-  id: 3,
-  sockets: [],
-  participants: 0,
-  model_path: "C:\\Users\\cyrus\\Desktop\\llama.cpp\\models\\13B\\ggml-model-q4_0.bin",
-  prompt_path: 'C:\\Users\\cyrus\\Desktop\\llama.cpp\\prompts\\test.txt',
-  top_k: 40,
-  top_p: 0.9,
-  num_tokens: 100,
-  repeat_penalty: 1.3,
-  repeat_penalty_num_tokens: 64,
-  temp: 0.1,
-  proc: null,
-}
-]
+}]
+
 
 const socketIO = require('socket.io')(http, {
   cors: {
@@ -64,6 +50,8 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 http.listen(PORT, () => {
   console.log(`Server listening on ${PORT}`);
@@ -82,28 +70,20 @@ socketIO.on('connection', (socket) => {
             socketIO.emit('model', m);
             // We need to ignore the first token that gets outputted
             let firstToken = true;
-            m.proc = spawn(LLAMA_EXE_PATH, ['-m', m.model_path, '-n', m.num_tokens, '--repeat_penalty', m.repeat_penalty, '--interactive-start'])
+            m.proc = spawn(LLAMA_EXE_PATH, ['-m', m.model_path, '-n', m.num_tokens, '--repeat_penalty', m.repeat_penalty, '--interactive-start', '--color'])
             if (m.proc != null) {
               console.log(`[*] Model ${id} loaded`)
-              replyBuffer = [];
               m.proc.stdout.on('data', (data) => {
                 // this is hacky, fix this later
                 if (firstToken == false) {
-                  output = data.toString('utf8');
-                  console.log(`Reply from ${m.name}: ${output}`);
-                  /*
-                  console.log(`Reply from ${m.name}: ${output}`);
-                  if (output == "," || output == "." || output == ";" || output == "!" || output == "?")  {
-                    replyBuffer.push(output);
-                    console.log("Sending message...");
-                    socketIO.emit("message", {model_id: m.id, senderName: m.name, text: replyBuffer.join("")});
-                    replyBuffer.length = 0;
+                  output = data.toString('utf8').replace(/\u001b[^m]*?m/g, "");
+                  console.log(`Output from ${m.name}: ${output}`);
+                  if (output.includes("\n> ")) {
+                    socketIO.emit("finished", {model_id: m.id, senderName: m.name, question: false, text: ""}); 
                   }
                   else {
-                    replyBuffer.push(output);
+                    socketIO.emit("output", {model_id: m.id, senderName: m.name, question: false, text: output});
                   }
-                  */
-                socketIO.emit("output", {model_id: m.id, senderName: m.name, text: output});
                 }
                 else {
                   firstToken = false;
@@ -111,7 +91,7 @@ socketIO.on('connection', (socket) => {
               });
               m.proc.stdout.on('close', (code) => {
                 console.log("Finished output.");
-                socketIO.emit("finished", {model_id: m.id, senderName: m.name, text: `END OF OUTPUT`});
+                socketIO.emit("finished", {model_id: m.id, senderName: m.name, question: false, text: `END OF OUTPUT`}); 
                 m.proc = null;
               });
             }
@@ -136,12 +116,14 @@ socketIO.on('connection', (socket) => {
 
     socket.on('send-input', (message) => {
       console.log(`Received input: ${message.text} from ${message.senderName} to model ${message.model_id}`);
-      socketIO.emit('input', message);
+      let msg = message;
+      msg.question = true;
+      socketIO.emit('input', msg);
       MODELS.forEach(m => {
-        if ((m.id === message.model_id) && (m.proc != null)) {
+        if ((m.id === msg.model_id) && (m.proc != null)) {
           console.log("Sending message to model stdin")
           m.proc.stdin.setEncoding('utf-8');
-          m.proc.stdin.write(message.text.concat("\n"));
+          m.proc.stdin.write(msg.text.concat("\n"));
         }
       })
     });
@@ -165,3 +147,7 @@ app.get('/getModels', (req, res) => {
   })
 });
 
+app.post('/editModelConfig', (req, res) => {
+  console.log('Got body', req.body);
+  res.sendStatus(200);
+})
